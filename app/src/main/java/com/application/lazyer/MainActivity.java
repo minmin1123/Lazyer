@@ -29,9 +29,23 @@ public class MainActivity extends Activity {
 
     private RadioGroup mRGLightOn2;//灯2组
 
+    final int GROP_PHONE =1;
+
+    final String LED="led";
+
+    final String LOCK="lock";
+
+    final boolean ON=true;
+
+    final boolean OFF=false;
+
     final int RCV_MSG=0x123;//收到服务器发送信息的msg.what
 
     final int SND_MSG=0x234;//发送信息到服务器的msg.what
+
+    final String host = "192.168.1.114";
+
+    final int port = 8888;
 
     Handler handler=new Handler(){
         public void handleMessage(Message msg) {
@@ -43,7 +57,6 @@ public class MainActivity extends Activity {
                     break;
                 case SND_MSG:
                     TCPSendData(msg.getData());
-
         }
         }
     };
@@ -62,11 +75,9 @@ public class MainActivity extends Activity {
             @Override
             public void run() {
                 //如果收到数据则发送msg到handler
-                final String host = "192.168.1.102";
-                final int port = 8086;
                 try{
                     Socket socket = new Socket(host, port);
-                    socket.setSoTimeout(8000);
+                    ;socket.setSoTimeout(8000);
                     InputStream inputStream = socket.getInputStream();
                     byte[] buf = new byte[1024];
                     while(true){
@@ -103,7 +114,7 @@ public class MainActivity extends Activity {
                     case R.id.LightOn1:
                         mIVLight1.setBackgroundResource(R.drawable.lighton);
                         try {
-                            sendJSONmsg(radioGroup.getId(),true);
+                            sendJSONmsg(LED,ON);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -111,7 +122,7 @@ public class MainActivity extends Activity {
                     case R.id.LightOff1:
                         mIVLight1.setBackgroundResource(R.drawable.lightoff);
                         try {
-                            sendJSONmsg(radioGroup.getId(),false);
+                            sendJSONmsg(LED,OFF);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -126,7 +137,7 @@ public class MainActivity extends Activity {
                     case R.id.LightOn2:
                         mIVLight2.setBackgroundResource(R.drawable.lighton);
                         try {
-                            sendJSONmsg(radioGroup.getId(),true);
+                            sendJSONmsg(LOCK,ON);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -134,7 +145,7 @@ public class MainActivity extends Activity {
                     case R.id.LightOff2:
                         mIVLight2.setBackgroundResource(R.drawable.lightoff);
                         try {
-                            sendJSONmsg(radioGroup.getId(),false);
+                            sendJSONmsg(LOCK,OFF);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -144,26 +155,26 @@ public class MainActivity extends Activity {
         });
     }
 
-    public String RtJSON(int gropId,boolean isOn) throws JSONException {
+    public String RtJSON(String type,boolean isOn) throws JSONException {
         JSONObject jsout=new JSONObject();
-        jsout.put("gropId", gropId);
+        jsout.put("gropId", 1);
+        jsout.put("type",type);
         jsout.put("isOn",isOn);
         return jsout.toString();
     }
 
-    public void sendJSONmsg(int gropId,boolean isOn) throws JSONException {
+    public void sendJSONmsg(String type,boolean isOn) throws JSONException {
         Message msg=new Message();
         msg.what=SND_MSG;
         Bundle data=new Bundle();
-        data.putString("json",RtJSON(gropId,isOn));
+        data.putString("json",RtJSON(type,isOn));
         msg.setData(data);
         handler.sendMessage(msg);
     }
 
 
     public void TCPSendData(final Bundle data){
-        final String host = "192.168.1.102";
-        final int port = 8086;
+
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -184,15 +195,6 @@ public class MainActivity extends Activity {
                     outputStream.flush();
                 } catch (IOException e) {
                     e.printStackTrace();
-                } finally {
-                    if (socket != null) {
-                        try {
-                            socket.close();
-                            socket = null;
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
                 }
             }
         }).start();
